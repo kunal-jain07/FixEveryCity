@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Features — FixEveryCity</title>
+    <meta name="description"
+        content="Explore the AI-powered features that make FixEveryCity the smartest civic issue resolution platform.">
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <!-- Supabase JS SDK via CDN (must load first, no defer) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js" defer></script>
+    <style>
+        /* Page-specific extras */
+        .features-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+            margin-top: 56px;
+        }
+
+        .feat-detail-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px 30px;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feat-detail-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: var(--transition);
+        }
+
+        .feat-detail-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feat-detail-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .feat-detail-card .feat-num {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .feat-detail-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feat-detail-card p {
+            font-size: .9rem;
+            color: var(--text-mid);
+            line-height: 1.7;
+        }
+
+        .feat-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .feat-tag {
+            background: var(--primary-lt);
+            color: var(--primary);
+            font-size: .72rem;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 3px 10px;
+        }
+
+        .feat-tag.purple {
+            background: var(--accent-lt);
+            color: var(--accent);
+        }
+
+        .feat-tag.teal {
+            background: var(--teal-lt);
+            color: #0097a7;
+        }
+
+        .feat-tag.green {
+            background: var(--green-lt);
+            color: #16a34a;
+        }
+
+        /* Comparison section */
+        .comparison-section {
+            background: var(--surface);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Metrics section */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-card .m-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .metric-card .m-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-card .m-label {
+            font-size: .83rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+    </style>
+</head>
+
+<body class="page-fade-in">
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-icon">🏙️</div>
+                Fix<span>EveryCity</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html" class="active">Features</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-cta">
+                <a href="login.html" class="btn btn-primary" id="nav-login-btn">Login</a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== FEATURES HERO ===== -->
+    <header class="features-hero">
+        <div class="container">
+            <div class="badge">Feature Overview</div>
+            <h1 class="section-title">Built for Modern Cities</h1>
+            <p class="section-sub" style="margin-bottom:0">
+                Every feature in FixEveryCity is designed to bridge the gap between citizens and city
+                administration — faster, smarter, and more transparently than ever.
+            </p>
+        </div>
+    </header>
+
+    <!-- ===== DETAIL FEATURE CARDS ===== -->
+    <section class="section">
+        <div class="container">
+            <div class="features-detail-grid">
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">01</div>
+                    <h3>🧠 Smart AI Responses</h3>
+                    <p>Natural language processing analyzes citizen descriptions and automatically extracts location,
+                        issue type, urgency level, and relevant department — no forms to fill.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag">NLP</span>
+                        <span class="feat-tag">Auto-classify</span>
+                        <span class="feat-tag">GPT-Powered</span>
+                    </div>
+                </div>
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">02</div>
+                    <h3>📡 Real-Time Analysis</h3>
+                    <p>Live data streams from field workers, IoT sensors, and citizen reports are aggregated and
+                        analyzed in real-time to give administrators a live pulse of the city.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag purple">Live Data</span>
+                        <span class="feat-tag purple">Streaming</span>
+                        <span class="feat-tag purple">IoT Ready</span>
+                    </div>
+                </div>
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">03</div>
+                    <h3>💡 Intelligent Suggestions</h3>
+                    <p>The AI cross-references your issue against 10,000+ past cases and suggests the most effective
+                        resolution path, saving departments hours of manual research.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag teal">Pattern Match</span>
+                        <span class="feat-tag teal">History Search</span>
+                        <span class="feat-tag teal">RAG</span>
+                    </div>
+                </div>
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">04</div>
+                    <h3>📊 Data Insights &amp; Analytics</h3>
+                    <p>Powerful dashboards reveal issue hotspots, departmental KPIs, resolution velocities, and citizen
+                        satisfaction scores — all in one place.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag green">Analytics</span>
+                        <span class="feat-tag green">Charts</span>
+                        <span class="feat-tag green">KPI Tracking</span>
+                    </div>
+                </div>
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">05</div>
+                    <h3>🔔 Smart Notifications</h3>
+                    <p>Citizens receive proactive updates via email, SMS, or push — including ETA changes, department
+                        hand-offs, and resolution confirmations.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag">Multi-channel</span>
+                        <span class="feat-tag">Webhooks</span>
+                    </div>
+                </div>
+
+                <div class="feat-detail-card reveal">
+                    <div class="feat-num">06</div>
+                    <h3>🗺️ Geo-Aware Routing</h3>
+                    <p>Automatic geofencing assigns issues to the right local zone, ward, or district team regardless of
+                        how vaguely the citizen described the location.</p>
+                    <div class="feat-tags">
+                        <span class="feat-tag purple">GIS</span>
+                        <span class="feat-tag purple">Geofencing</span>
+                        <span class="feat-tag purple">Geo-AI</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== METRICS ===== -->
+    <section class="section-sm"
+        style="background: var(--surface); border-top:1.5px solid var(--border); border-bottom: 1.5px solid var(--border);">
+        <div class="container">
+            <div class="text-center reveal" style="margin-bottom:48px">
+                <div class="badge">Impact</div>
+                <h2 class="section-title">Proven Results</h2>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card reveal">
+                    <span class="m-icon">⚡</span>
+                    <div class="m-val">60%</div>
+                    <div class="m-label">Faster Resolution Time</div>
+                </div>
+                <div class="metric-card reveal">
+                    <span class="m-icon">🎯</span>
+                    <div class="m-val">97%</div>
+                    <div class="m-label">AI Routing Accuracy</div>
+                </div>
+                <div class="metric-card reveal">
+                    <span class="m-icon">😊</span>
+                    <div class="m-val">94%</div>
+                    <div class="m-label">Citizen Satisfaction</div>
+                </div>
+                <div class="metric-card reveal">
+                    <span class="m-icon">🏙️</span>
+                    <div class="m-val">98+</div>
+                    <div class="m-label">Cities Onboarded</div>
+                </div>
+                <div class="metric-card reveal">
+                    <span class="m-icon">📋</span>
+                    <div class="m-val">12K+</div>
+                    <div class="m-label">Issues Resolved</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== COMPARISON TABLE ===== -->
+    <section class="section comparison-section">
+        <div class="container">
+            <div class="text-center reveal">
+                <div class="badge">vs. Traditional Systems</div>
+                <h2 class="section-title">Why FixEveryCity?</h2>
+                <p class="section-sub">See how we compare against traditional city issue reporting methods.</p>
+            </div>
+
+            <div class="table-wrap reveal">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Capability</th>
+                            <th>Traditional Systems</th>
+                            <th>FixEveryCity AI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Auto-categorization of issues</td>
+                            <td><span class="cross">✗ Manual</span></td>
+                            <td><span class="check">✓ AI-Powered</span></td>
+                        </tr>
+                        <tr>
+                            <td>Real-time status updates</td>
+                            <td><span class="cross">✗ Email only</span></td>
+                            <td><span class="check">✓ Live + Multi-channel</span></td>
+                        </tr>
+                        <tr>
+                            <td>Intelligent routing to departments</td>
+                            <td><span class="cross">✗ Manual assignment</span></td>
+                            <td><span class="check">✓ Geo-AI Routing</span></td>
+                        </tr>
+                        <tr>
+                            <td>Predictive hotspot detection</td>
+                            <td><span class="cross">✗ Not available</span></td>
+                            <td><span class="check">✓ ML Analytics</span></td>
+                        </tr>
+                        <tr>
+                            <td>Solution suggestions from past data</td>
+                            <td><span class="cross">✗ No memory</span></td>
+                            <td><span class="check">✓ 10,000+ case database</span></td>
+                        </tr>
+                        <tr>
+                            <td>Citizen satisfaction tracking</td>
+                            <td><span class="cross">✗ Ad-hoc surveys</span></td>
+                            <td><span class="check">✓ Built-in feedback loop</span></td>
+                        </tr>
+                        <tr>
+                            <td>API integration for smart city systems</td>
+                            <td><span class="cross">✗ Proprietary, closed</span></td>
+                            <td><span class="check">✓ Open REST API</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <div class="container">
+        <div class="cta-banner reveal">
+            <h2>Experience all features live</h2>
+            <p>Open the AI dashboard and see FixEveryCity in action — no signup required.</p>
+            <a href="dashboard.html" class="btn btn-ghost btn-lg">Open AI Dashboard</a>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="nav-logo">
+                        <div class="logo-icon">🏙️</div>Fix<span style="color:var(--primary)">EveryCity</span>
+                    </div>
+                    <p>AI-powered civic technology for faster, smarter urban management.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <ul>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html">Home</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Project</h5>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Team</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Links</h5>
+                    <ul>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">API Docs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FixEveryCity · Hackathon 2026 ✨</p>
+                <p>Powered by AI &amp; Civic Passion</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

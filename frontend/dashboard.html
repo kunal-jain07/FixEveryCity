@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Dashboard — FixEveryCity</title>
+    <meta name="description" content="Interact with the FixEveryCity AI to analyze and resolve urban issues.">
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <!-- Supabase JS SDK via CDN (must load first, no defer) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js" defer></script>
+    <style>
+        .dash-page-wrap {
+            background: var(--bg);
+            min-height: calc(100vh - 68px);
+            padding: 40px 0 80px;
+        }
+
+        .dash-page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .dash-page-header h1 {
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .dash-page-header p {
+            font-size: .98rem;
+            color: var(--text-mid);
+        }
+
+        .dash-layout-two {
+            display: grid;
+            grid-template-columns: 1fr 290px;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #f0fff5;
+            border: 1.5px solid #86efac;
+            color: #16a34a;
+            font-size: .78rem;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 5px 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: statusPulse 2s ease infinite;
+        }
+
+        @keyframes statusPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(.8)
+            }
+        }
+
+        .model-select {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-family: var(--font);
+            font-size: .85rem;
+            color: var(--text-dark);
+            background: var(--bg);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .model-select:focus {
+            border-color: var(--primary);
+        }
+
+        .response-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 14px;
+            font-family: var(--font);
+            font-size: .78rem;
+            font-weight: 500;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-lt);
+        }
+
+        .sidebar-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .sidebar-card-header {
+            padding: 16px 20px;
+            border-bottom: 1.5px solid var(--border);
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            background: var(--bg);
+        }
+
+        .sidebar-card-body {
+            padding: 16px 20px;
+        }
+
+        .sidebar-stat {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: .83rem;
+        }
+
+        .sidebar-stat:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar-stat .s-label {
+            color: var(--text-muted);
+        }
+
+        .sidebar-stat .s-val {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .token-bar-wrap {
+            margin-top: 12px;
+        }
+
+        .token-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: .75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .token-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .token-bar-fill {
+            height: 100%;
+            width: 23%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 999px;
+        }
+
+        .response-text {
+            white-space: pre-wrap;
+            font-size: .93rem;
+            line-height: 1.8;
+            animation: fadeInText .5s ease forwards;
+        }
+
+        @keyframes fadeInText {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        /* DB save feedback */
+        .db-save-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 999px;
+            margin-top: 8px;
+        }
+
+        .db-save-badge.saved {
+            background: #f0fff5;
+            color: #16a34a;
+            border: 1px solid #86efac;
+        }
+
+        .db-save-badge.unsaved {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        /* Logout button in sidebar */
+        .logout-card {
+            padding: 16px 20px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #fecaca;
+            border-radius: var(--radius-sm);
+            background: #fef2f2;
+            color: #dc2626;
+            font-family: var(--font);
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+            transform: translateY(-1px);
+        }
+
+        /* User welcome */
+        .user-welcome {
+            font-size: .83rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .user-welcome strong {
+            color: var(--primary);
+        }
+
+        /* ===== ISSUE SUBMISSION FORM ===== */
+        .issue-submit-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+
+        .issue-card-header {
+            padding: 28px 36px;
+            border-bottom: 1.5px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, #f0fdf4, #f0faff);
+        }
+
+        .issue-card-header .issue-header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #22c55e, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .issue-card-header h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .issue-card-header p {
+            font-size: .83rem;
+            color: var(--text-muted);
+        }
+
+        .issue-form-body {
+            padding: 36px;
+        }
+
+        .issue-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 22px;
+        }
+
+        .issue-form-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .issue-form-label {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text-mid);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .issue-form-label .req {
+            color: #ef4444;
+            font-size: .7rem;
+        }
+
+        .issue-textarea {
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            font-family: var(--font);
+            font-size: .95rem;
+            color: var(--text-dark);
+            background: var(--bg);
+            outline: none;
+            transition: var(--transition);
+            line-height: 1.6;
+        }
+
+        .issue-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .issue-textarea:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 110, 247, .1);
+        }
+
+        .coord-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .issue-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--font);
+            font-size: .95rem;
+            color: var(--text-dark);
+            background: var(--bg);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .issue-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .issue-input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 110, 247, .1);
+        }
+
+        .issue-input.input-error,
+        .issue-textarea.input-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, .1);
+        }
+
+        .input-hint {
+            font-size: .75rem;
+            color: var(--text-muted);
+        }
+
+        .coord-icon {
+            font-size: .9rem;
+        }
+
+        /* Submit actions row */
+        .issue-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .issue-submit-btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #22c55e, #06b6d4);
+            color: #fff;
+            font-family: var(--font);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, .35);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .issue-submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, .45);
+        }
+
+        .issue-submit-btn:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
+        .issue-submit-btn .btn-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, .35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        .issue-submit-btn.loading .btn-spinner {
+            display: inline-block;
+        }
+
+        .issue-submit-btn.loading .btn-label {
+            opacity: .8;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .use-my-location-btn {
+            padding: 8px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            font-family: var(--font);
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .use-my-location-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-lt);
+        }
+
+        /* Issue feedback messages */
+        .issue-feedback {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            font-size: .88rem;
+            font-weight: 500;
+            margin-top: 16px;
+            animation: fadeInText .3s ease forwards;
+        }
+
+        .issue-feedback.visible {
+            display: flex;
+        }
+
+        .issue-feedback.success {
+            background: #f0fff5;
+            border: 1.5px solid #86efac;
+            color: #16a34a;
+        }
+
+        .issue-feedback.error {
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            color: #dc2626;
+        }
+
+        /* Submitted issues list */
+        .submitted-issues {
+            margin-top: 24px;
+        }
+
+        .submitted-issues-title {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .issue-list-item {
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            font-size: .85rem;
+            color: var(--text-mid);
+            transition: var(--transition);
+        }
+
+        .issue-list-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-lt);
+        }
+
+        .issue-list-meta {
+            display: flex;
+            gap: 14px;
+            margin-top: 6px;
+            font-size: .75rem;
+            color: var(--text-muted);
+        }
+
+        /* Tabs for switching views */
+        .dash-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 4px;
+        }
+
+        .dash-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            font-family: var(--font);
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .dash-tab:hover {
+            color: var(--text-dark);
+        }
+
+        .dash-tab.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media(max-width:900px) {
+            .dash-layout-two {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:480px) {
+            .coord-row {
+                grid-template-columns: 1fr;
+            }
+
+            .issue-form-body {
+                padding: 24px;
+            }
+
+            .issue-card-header {
+                padding: 20px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body class="page-fade-in">
+
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-icon">🏙️</div>Fix<span>EveryCity</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-cta">
+                <span class="status-badge"><span class="status-dot"></span>AI Online</span>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="dash-page-wrap">
+        <div class="container">
+
+            <div class="dash-page-header reveal">
+                <div class="badge">🤖 AI Interface · Live</div>
+                <h1>FixEveryCity <span
+                        style="background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI
+                        Dashboard</span></h1>
+                <p>Describe any city issue and let our AI analyze, prioritize, and suggest next steps.</p>
+            </div>
+
+            <!-- ===== TAB SWITCHER ===== -->
+            <div class="dash-tabs reveal" id="dashTabs">
+                <button class="dash-tab active" data-tab="ai-analyzer" id="tab-ai" onclick="switchTab('ai-analyzer')">
+                    🧠 AI Analyzer
+                </button>
+                <button class="dash-tab" data-tab="submit-issue" id="tab-issue" onclick="switchTab('submit-issue')">
+                    📍 Submit Issue
+                </button>
+            </div>
+
+            <div class="dash-layout-two">
+
+                <!-- ===== MAIN CONTENT AREA ===== -->
+                <div>
+
+                    <!-- TAB 1: AI Analyzer (existing) -->
+                    <div class="tab-content active" id="tab-ai-analyzer">
+                        <div class="dashboard-card reveal">
+                            <div class="dashboard-header">
+                                <div class="dash-icon">🧠</div>
+                                <div>
+                                    <h2>City Issue Analyzer</h2>
+                                    <p>Powered by FixEveryCity AI · GPT-Enhanced</p>
+                                </div>
+                                <div style="margin-left:auto">
+                                    <select class="model-select" id="modelSelect" title="Select model">
+                                        <option value="standard">Standard</option>
+                                        <option value="advanced" selected>Advanced</option>
+                                        <option value="fast">Fast</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-body">
+                                <div class="prompt-label">Describe the Issue</div>
+                                <textarea class="prompt-textarea" id="promptInput"
+                                    placeholder="e.g. There is a broken pothole on Elm Street near the school causing safety hazard after rain..."
+                                    maxlength="2000" oninput="updateCharCount()"></textarea>
+
+                                <div class="prompt-controls">
+                                    <span class="char-count" id="charCount">0 / 2000 characters</span>
+                                    <div style="display:flex;gap:10px">
+                                        <button class="btn btn-outline" onclick="clearPrompt()">Clear</button>
+                                        <button class="btn btn-primary" id="generateBtn" onclick="generateResponse()">🚀
+                                            Analyze
+                                            with AI</button>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:20px">
+                                    <div class="prompt-label">Quick Suggestions</div>
+                                    <div class="suggestions">
+                                        <span class="chip"
+                                            onclick="fillChip('Pothole on main road causing accidents')">🚗 Road
+                                            Pothole</span>
+                                        <span class="chip"
+                                            onclick="fillChip('Streetlight not working for 3 days on Oak Avenue')">💡
+                                            Broken
+                                            Streetlight</span>
+                                        <span class="chip"
+                                            onclick="fillChip('Garbage not collected for a week in our area')">🗑️
+                                            Garbage</span>
+                                        <span class="chip"
+                                            onclick="fillChip('Sewage overflow near the market causing hygiene risk')">💧
+                                            Sewage</span>
+                                        <span class="chip"
+                                            onclick="fillChip('Damaged park bench and broken swings in city park')">🌳
+                                            Park
+                                            Damage</span>
+                                    </div>
+                                </div>
+
+                                <hr class="dash-divider" />
+
+                                <div class="prompt-label">AI Analysis</div>
+
+                                <div class="loader" id="aiLoader">
+                                    <div class="loader-dots"><span></span><span></span><span></span></div>
+                                    <span>AI is analyzing the issue…</span>
+                                </div>
+
+                                <div class="response-box" id="responseBox">
+                                    <div class="response-placeholder" id="responsePlaceholder">
+                                        <span class="placeholder-icon">🤖</span>
+                                        <span>Your AI analysis will appear here</span>
+                                    </div>
+                                </div>
+
+                                <!-- DB save status -->
+                                <div id="dbSaveStatus"></div>
+
+                                <div class="response-actions" id="responseActions" style="display:none">
+                                    <button class="action-btn" onclick="copyResponse()">📋 Copy</button>
+                                    <button class="action-btn" onclick="generateResponse()">🔄 Regenerate</button>
+                                </div>
+
+                                <div class="dash-history" id="historySection" style="display:none">
+                                    <div class="history-title">Recent Queries</div>
+                                    <div class="history-list" id="historyList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Submit Issue with Coordinates (NEW) -->
+                    <div class="tab-content" id="tab-submit-issue">
+                        <div class="issue-submit-card reveal">
+                            <div class="issue-card-header">
+                                <div class="issue-header-icon">📍</div>
+                                <div>
+                                    <h2>Submit City Issue</h2>
+                                    <p>Report an issue with its geographic location</p>
+                                </div>
+                            </div>
+
+                            <div class="issue-form-body">
+                                <form id="issueSubmitForm" onsubmit="handleIssueSubmit(event)">
+
+                                    <!-- Issue Description -->
+                                    <div class="issue-form-group">
+                                        <label class="issue-form-label" for="issueText">
+                                            📝 Issue Description <span class="req">*</span>
+                                        </label>
+                                        <textarea class="issue-textarea" id="issueText"
+                                            placeholder="Describe the issue in detail... e.g. Large pothole on Main Street near intersection with Oak Avenue. Multiple cars have been damaged. The pothole appeared after recent heavy rains."
+                                            required maxlength="2000"></textarea>
+                                        <span class="input-hint">Provide as much detail as possible for faster
+                                            resolution</span>
+                                    </div>
+
+                                    <!-- Coordinates Row -->
+                                    <div class="issue-form-group">
+                                        <label class="issue-form-label">
+                                            🌐 Location Coordinates <span class="req">*</span>
+                                        </label>
+                                        <div class="coord-row">
+                                            <div>
+                                                <input type="number" step="any" class="issue-input" id="issueLat"
+                                                    placeholder="e.g. 28.6139" required min="-90" max="90" />
+                                                <span class="input-hint"><span class="coord-icon">↕️</span> Latitude
+                                                    (-90 to 90)</span>
+                                            </div>
+                                            <div>
+                                                <input type="number" step="any" class="issue-input" id="issueLng"
+                                                    placeholder="e.g. 77.2090" required min="-180" max="180" />
+                                                <span class="input-hint"><span class="coord-icon">↔️</span> Longitude
+                                                    (-180 to 180)</span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="use-my-location-btn" id="useLocationBtn"
+                                            onclick="useMyLocation()">
+                                            📍 Use My Current Location
+                                        </button>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="issue-actions">
+                                        <button type="button" class="btn btn-outline" onclick="clearIssueForm()">Clear
+                                            Form</button>
+                                        <button type="submit" class="issue-submit-btn" id="issueSubmitBtn">
+                                            <span class="btn-spinner"></span>
+                                            <span class="btn-label">📩 Submit Issue</span>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Feedback messages -->
+                                <div class="issue-feedback success" id="issueSuccess">
+                                    <span>✅</span>
+                                    <span id="issueSuccessMsg">Issue submitted successfully!</span>
+                                </div>
+                                <div class="issue-feedback error" id="issueError">
+                                    <span>⚠️</span>
+                                    <span id="issueErrorMsg">Something went wrong.</span>
+                                </div>
+
+                                <!-- Recently submitted issues -->
+                                <div class="submitted-issues" id="submittedIssues" style="display:none">
+                                    <div class="submitted-issues-title">📋 Your Recent Submissions</div>
+                                    <div id="issuesList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ===== SIDEBAR ===== -->
+                <div style="display:flex;flex-direction:column;gap:20px">
+
+                    <!-- User Account Card -->
+                    <div class="sidebar-card reveal">
+                        <div class="sidebar-card-header">👤 Account</div>
+                        <div class="sidebar-card-body">
+                            <div class="user-welcome" id="userWelcome">
+                                Loading...
+                            </div>
+                            <button class="logout-btn" id="dashLogoutBtn" onclick="signOutUser()">
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card reveal">
+                        <div class="sidebar-card-header">📈 Session Stats</div>
+                        <div class="sidebar-card-body">
+                            <div class="sidebar-stat"><span class="s-label">Queries sent</span><span class="s-val"
+                                    id="queryCount">0</span></div>
+                            <div class="sidebar-stat"><span class="s-label">Issues submitted</span><span class="s-val"
+                                    id="issueCount">0</span></div>
+                            <div class="sidebar-stat"><span class="s-label">Avg. response time</span><span class="s-val"
+                                    id="avgTime">—</span></div>
+                            <div class="sidebar-stat"><span class="s-label">Model</span><span
+                                    class="s-val">GPT-Enhanced</span></div>
+                            <div class="sidebar-stat"><span class="s-label">Status</span><span class="s-val"
+                                    style="color:#16a34a">🟢 Online</span></div>
+                            <div class="token-bar-wrap">
+                                <div class="token-bar-label"><span>Context usage</span><span id="tokenPct">0%</span>
+                                </div>
+                                <div class="token-bar">
+                                    <div class="token-bar-fill" id="tokenFill" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card reveal">
+                        <div class="sidebar-card-header">💡 Better Results</div>
+                        <div class="sidebar-card-body">
+                            <ul style="display:flex;flex-direction:column;gap:10px">
+                                <li style="display:flex;gap:8px;font-size:.82rem;color:var(--text-mid)">
+                                    <span>📍</span>Include street name or landmark
+                                </li>
+                                <li style="display:flex;gap:8px;font-size:.82rem;color:var(--text-mid)">
+                                    <span>⏰</span>Mention how long the issue exists
+                                </li>
+                                <li style="display:flex;gap:8px;font-size:.82rem;color:var(--text-mid)">
+                                    <span>⚠️</span>Describe any safety concerns
+                                </li>
+                                <li style="display:flex;gap:8px;font-size:.82rem;color:var(--text-mid)">
+                                    <span>🔢</span>Estimate people affected
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-card reveal">
+                        <div class="sidebar-card-header">🗂️ Categories</div>
+                        <div class="sidebar-card-body">
+                            <div style="display:flex;flex-wrap:wrap;gap:7px">
+                                <span class="chip" style="font-size:.75rem" onclick="fillChip('Road damage issue')">🛣️
+                                    Roads</span>
+                                <span class="chip" style="font-size:.75rem"
+                                    onclick="fillChip('Public lighting issue')">💡 Lighting</span>
+                                <span class="chip" style="font-size:.75rem"
+                                    onclick="fillChip('Waste management issue')">🗑️ Waste</span>
+                                <span class="chip" style="font-size:.75rem" onclick="fillChip('Water supply issue')">💧
+                                    Water</span>
+                                <span class="chip" style="font-size:.75rem"
+                                    onclick="fillChip('Park maintenance issue')">🌳 Parks</span>
+                                <span class="chip" style="font-size:.75rem"
+                                    onclick="fillChip('Public transport issue')">🚌 Transit</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="nav-logo">
+                        <div class="logo-icon">🏙️</div>Fix<span style="color:var(--primary)">EveryCity</span>
+                    </div>
+                    <p>AI-powered civic technology for faster, smarter urban management.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <ul>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html">Home</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Project</h5>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Team</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Links</h5>
+                    <ul>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">API Docs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FixEveryCity · Hackathon 2026 ✨</p>
+                <p>Powered by AI &amp; Civic Passion</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Dashboard-specific auth, DB integration & Issue submission -->
+    <script>
+        /**
+         * Dashboard Authentication, Database Integration & Issue Submission
+         * ==================================================================
+         * - Checks user session on page load
+         * - Displays user info in sidebar
+         * - Saves AI responses to Supabase 'messages' table
+         * - Handles issue submission with coordinates to 'issues' table
+         */
+
+        let issueSubmitCount = 0;
+
+        // ============================================================
+        // PAGE INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- SESSION PROTECTION ---
+            await requireAuth();
+
+            // --- DISPLAY USER INFO ---
+            const user = await getCurrentUser();
+            const welcomeEl = document.getElementById('userWelcome');
+
+            if (user && welcomeEl) {
+                const email = user.email || 'User';
+                const shortName = email.split('@')[0];
+                welcomeEl.innerHTML = `
+                    Signed in as<br>
+                    <strong>${shortName}</strong>
+                    <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">${email}</div>
+                `;
+            } else if (welcomeEl) {
+                welcomeEl.textContent = 'Not signed in';
+            }
+
+            // --- UPDATE NAVBAR ---
+            updateAuthUI();
+
+            // --- LOAD RECENT ISSUES ---
+            loadRecentIssues();
+        });
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        function switchTab(tabId) {
+            // Update tab buttons
+            document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.dash-tab[data-tab="${tabId}"]`).classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // ============================================================
+        // ISSUE SUBMISSION FORM HANDLER
+        // ============================================================
+
+        /**
+         * Handles the issue submission form.
+         * Validates all fields, submits to Supabase, shows feedback.
+         */
+        async function handleIssueSubmit(e) {
+            e.preventDefault();
+
+            const textInput = document.getElementById('issueText');
+            const latInput = document.getElementById('issueLat');
+            const lngInput = document.getElementById('issueLng');
+            const btn = document.getElementById('issueSubmitBtn');
+            const successEl = document.getElementById('issueSuccess');
+            const successMsg = document.getElementById('issueSuccessMsg');
+            const errorEl = document.getElementById('issueError');
+            const errorMsg = document.getElementById('issueErrorMsg');
+
+            // Reset states
+            successEl.classList.remove('visible');
+            errorEl.classList.remove('visible');
+            textInput.classList.remove('input-error');
+            latInput.classList.remove('input-error');
+            lngInput.classList.remove('input-error');
+
+            const issueText = textInput.value.trim();
+            const latVal = latInput.value.trim();
+            const lngVal = lngInput.value.trim();
+
+            // --- Client-side validation ---
+            if (!issueText) {
+                textInput.classList.add('input-error');
+                errorMsg.textContent = 'Please describe the issue.';
+                errorEl.classList.add('visible');
+                textInput.focus();
+                return;
+            }
+
+            if (!latVal) {
+                latInput.classList.add('input-error');
+                errorMsg.textContent = 'Please enter a latitude value.';
+                errorEl.classList.add('visible');
+                latInput.focus();
+                return;
+            }
+
+            const lat = parseFloat(latVal);
+            if (isNaN(lat) || lat < -90 || lat > 90) {
+                latInput.classList.add('input-error');
+                errorMsg.textContent = 'Latitude must be a number between -90 and 90.';
+                errorEl.classList.add('visible');
+                latInput.focus();
+                return;
+            }
+
+            if (!lngVal) {
+                lngInput.classList.add('input-error');
+                errorMsg.textContent = 'Please enter a longitude value.';
+                errorEl.classList.add('visible');
+                lngInput.focus();
+                return;
+            }
+
+            const lng = parseFloat(lngVal);
+            if (isNaN(lng) || lng < -180 || lng > 180) {
+                lngInput.classList.add('input-error');
+                errorMsg.textContent = 'Longitude must be a number between -180 and 180.';
+                errorEl.classList.add('visible');
+                lngInput.focus();
+                return;
+            }
+
+            // --- Check Supabase ---
+            if (!isSupabaseConfigured()) {
+                errorMsg.textContent = 'Supabase is not configured. Please add your project credentials in supabaseClient.js.';
+                errorEl.classList.add('visible');
+                return;
+            }
+
+            // --- Loading state ---
+            btn.disabled = true;
+            btn.classList.add('loading');
+
+            // --- Submit to Supabase ---
+            const result = await submitIssueToDb(issueText, lat, lng);
+
+            if (result.success) {
+                // Show success
+                successMsg.textContent = `✅ Issue submitted successfully! Ticket saved to database.`;
+                successEl.classList.add('visible');
+
+                // Clear form
+                document.getElementById('issueSubmitForm').reset();
+
+                // Update sidebar count
+                issueSubmitCount++;
+                const countEl = document.getElementById('issueCount');
+                if (countEl) countEl.textContent = issueSubmitCount;
+
+                // Refresh recent issues list
+                loadRecentIssues();
+            } else {
+                // Show error
+                errorMsg.textContent = result.error || 'Failed to submit issue. Please try again.';
+                errorEl.classList.add('visible');
+                console.error('[FixEveryCity] Issue submission error:', result.error);
+            }
+
+            btn.disabled = false;
+            btn.classList.remove('loading');
+        }
+
+        // ============================================================
+        // GEOLOCATION — Use My Location
+        // ============================================================
+
+        /**
+         * Uses the browser's Geolocation API to fill lat/lng fields.
+         */
+        function useMyLocation() {
+            const btn = document.getElementById('useLocationBtn');
+
+            if (!navigator.geolocation) {
+                showAuthToast('Geolocation is not supported by your browser.', 'error');
+                return;
+            }
+
+            btn.textContent = '⏳ Locating...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('issueLat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('issueLng').value = position.coords.longitude.toFixed(6);
+                    btn.innerHTML = '📍 Use My Current Location';
+                    btn.disabled = false;
+                    showAuthToast('Location detected! Coordinates filled.', 'success');
+                },
+                (error) => {
+                    btn.innerHTML = '📍 Use My Current Location';
+                    btn.disabled = false;
+                    let msg = 'Unable to get your location.';
+                    if (error.code === 1) msg = 'Location permission denied. Please enable it in your browser settings.';
+                    if (error.code === 2) msg = 'Location unavailable. Please enter coordinates manually.';
+                    if (error.code === 3) msg = 'Location request timed out. Please try again.';
+                    showAuthToast(msg, 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // ============================================================
+        // CLEAR ISSUE FORM
+        // ============================================================
+        function clearIssueForm() {
+            document.getElementById('issueSubmitForm').reset();
+            document.getElementById('issueSuccess').classList.remove('visible');
+            document.getElementById('issueError').classList.remove('visible');
+            document.getElementById('issueText').classList.remove('input-error');
+            document.getElementById('issueLat').classList.remove('input-error');
+            document.getElementById('issueLng').classList.remove('input-error');
+        }
+
+        // ============================================================
+        // LOAD RECENT ISSUES FROM DB
+        // ============================================================
+
+        /**
+         * Fetches and displays the user's recently submitted issues.
+         */
+        async function loadRecentIssues() {
+            if (!isSupabaseConfigured()) return;
+
+            const result = await fetchUserIssues(5);
+            const container = document.getElementById('submittedIssues');
+            const list = document.getElementById('issuesList');
+
+            if (!container || !list) return;
+
+            if (result.success && result.data && result.data.length > 0) {
+                container.style.display = 'block';
+                list.innerHTML = '';
+
+                result.data.forEach(issue => {
+                    const date = new Date(issue.created_at).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    const shortText = issue.issue_text.length > 80
+                        ? issue.issue_text.slice(0, 80) + '…'
+                        : issue.issue_text;
+
+                    const item = document.createElement('div');
+                    item.className = 'issue-list-item';
+                    item.innerHTML = `
+                        <div>${shortText}</div>
+                        <div class="issue-list-meta">
+                            <span>📍 ${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}</span>
+                            <span>🕐 ${date}</span>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // ============================================================
+        // OVERRIDE: generateResponse with DB saving
+        // ============================================================
+        const _originalGenerateResponse = window.generateResponse;
+
+        window.generateResponse = async function () {
+            const input = document.getElementById('promptInput');
+            const btn = document.getElementById('generateBtn');
+            const loader = document.getElementById('aiLoader');
+            const box = document.getElementById('responseBox');
+            const ph = document.getElementById('responsePlaceholder');
+            const acts = document.getElementById('responseActions');
+            const dbStatus = document.getElementById('dbSaveStatus');
+
+            if (!input) return;
+            const prompt = input.value.trim();
+            if (!prompt) {
+                input.focus();
+                shakeElement(input);
+                return;
+            }
+
+            // --- UI: Loading state ---
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Analyzing…'; }
+            if (loader) { loader.classList.add('active'); }
+            if (box) { box.innerHTML = ''; box.classList.remove('has-response'); }
+            if (ph) { ph.style.display = 'none'; }
+            if (acts) { acts.style.display = 'none'; }
+            if (dbStatus) { dbStatus.innerHTML = ''; }
+
+            const startTime = Date.now();
+
+            try {
+                // --- Mock response ---
+                await simulateDelay(1800 + Math.random() * 1200);
+                const aiText = generateMockResponse(prompt);
+
+                // --- Display response ---
+                lastResponse = aiText;
+                if (box) {
+                    box.classList.add('has-response');
+                    const pre = document.createElement('div');
+                    pre.className = 'response-text';
+                    pre.textContent = aiText;
+                    box.appendChild(pre);
+                }
+
+                // Update stats
+                queryCount++;
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                totalTime += parseFloat(elapsed);
+
+                const qc = document.getElementById('queryCount');
+                const avg = document.getElementById('avgTime');
+                if (qc) qc.textContent = queryCount;
+                if (avg) avg.textContent = (totalTime / queryCount).toFixed(1) + 's';
+
+                // Add to history
+                addToHistory(prompt);
+                if (acts) acts.style.display = 'flex';
+
+                // --- SAVE TO SUPABASE DATABASE ---
+                if (isSupabaseConfigured()) {
+                    const saveResult = await saveMessage(prompt, aiText);
+                    if (dbStatus) {
+                        if (saveResult.success) {
+                            dbStatus.innerHTML = '<div class="db-save-badge saved">💾 Saved to database</div>';
+                        } else {
+                            dbStatus.innerHTML = `<div class="db-save-badge unsaved">⚠️ ${saveResult.error}</div>`;
+                        }
+                    }
+                }
+
+            } catch (_err) {
+                if (box) {
+                    box.classList.add('has-response');
+                    const err = document.createElement('div');
+                    err.className = 'response-text';
+                    err.style.color = '#ef4444';
+                    err.textContent = '⚠️ Unable to connect to the AI service. Please check your connection or try again.';
+                    box.appendChild(err);
+                }
+            }
+
+            // --- Reset UI ---
+            if (btn) { btn.disabled = false; btn.textContent = '🚀 Analyze with AI'; }
+            if (loader) { loader.classList.remove('active'); }
+        };
+    </script>
+
+</body>
+
+</html>

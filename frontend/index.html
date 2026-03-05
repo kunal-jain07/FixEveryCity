@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FixEveryCity — AI-Powered City Issue Resolution</title>
+    <meta name="description"
+        content="FixEveryCity uses AI to help citizens report, track, and resolve urban infrastructure issues faster than ever.">
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Lucide icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <!-- Supabase JS SDK via CDN (must load first, no defer) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js" defer></script>
+</head>
+
+<body class="page-fade-in">
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo" id="nav-logo">
+                <div class="logo-icon">🏙️</div>
+                Fix<span>EveryCity</span>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+
+            <div class="nav-cta">
+                <a href="login.html" class="btn btn-primary" id="nav-login-btn">Login</a>
+            </div>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <header class="hero">
+        <div class="hero-blob hero-blob-1"></div>
+        <div class="hero-blob hero-blob-2"></div>
+
+        <div class="container hero-content">
+            <div class="badge">🚀 AI-Powered Civic Tech · Hackathon 2026</div>
+
+            <h1 class="hero-title">
+                Fix City Issues<br>
+                with the Power of <span class="highlight">Artificial Intelligence</span>
+            </h1>
+
+            <p class="hero-sub">
+                FixEveryCity empowers citizens to report urban problems, track resolutions,
+                and drive real change — supercharged by AI-driven analysis and smart routing.
+            </p>
+
+            <div class="hero-actions">
+                <a href="dashboard.html" class="btn btn-primary btn-lg" id="hero-cta-btn">
+                    🤖 Try the AI
+                </a>
+                <a href="features.html" class="btn btn-outline btn-lg" id="hero-features-btn">
+                    Explore Features
+                </a>
+            </div>
+
+            <!-- AI Input Box -->
+            <div class="hero-input-wrap" id="heroInputWrap">
+                <span style="font-size:1.1rem">🔍</span>
+                <input type="text" id="heroInput"
+                    placeholder="Describe a city issue… e.g. 'Broken streetlight on Main St.'" maxlength="200" />
+                <button class="btn btn-primary" id="heroAskBtn" onclick="heroQuickAsk()">Ask AI</button>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-num" data-count="12400">0</div>
+                    <div class="stat-label">Issues Resolved</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num" data-count="98">0</div>
+                    <div class="stat-label">Cities Covered</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num" data-count="94">0</div>
+                    <div class="stat-label">% Satisfaction</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num" data-count="3">0</div>
+                    <div class="stat-label">Avg. Resolution Days</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== FEATURES OVERVIEW ===== -->
+    <section class="section" id="features-overview">
+        <div class="container">
+            <div class="text-center reveal">
+                <div class="badge">Core Capabilities</div>
+                <h2 class="section-title">Everything your city needs</h2>
+                <p class="section-sub">
+                    From AI-powered issue detection to intelligent routing — FixEveryCity handles it all.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-icon icon-blue">🧠</div>
+                    <h3>Smart AI Analysis</h3>
+                    <p>Our AI automatically categorizes, prioritizes, and routes issues to the right department in
+                        seconds.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon icon-purple">📡</div>
+                    <h3>Real-Time Tracking</h3>
+                    <p>Citizens get live updates on issue status with push notifications and transparent progress
+                        timelines.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon icon-teal">💡</div>
+                    <h3>Intelligent Suggestions</h3>
+                    <p>AI suggests similar past issues and proven solutions, cutting resolution time by up to 60%.</p>
+                </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon icon-green">📊</div>
+                    <h3>Data Insights</h3>
+                    <p>City administrators get a powerful analytics dashboard to identify hotspots and allocate
+                        resources smartly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== HOW IT WORKS ===== -->
+    <section class="how-it-works section-sm">
+        <div class="container">
+            <div class="text-center reveal">
+                <div class="badge">Process</div>
+                <h2 class="section-title">How FixEveryCity Works</h2>
+                <p class="section-sub">
+                    Three simple steps from issue discovery to resolution — powered by AI at every stage.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-item reveal">
+                    <div class="step-num">1</div>
+                    <h3>Report the Issue</h3>
+                    <p>Upload a photo or describe the problem. Our AI instantly understands context, location, and
+                        severity.</p>
+                </div>
+                <div class="step-item reveal">
+                    <div class="step-num">2</div>
+                    <h3>AI Routes & Prioritizes</h3>
+                    <p>The system assigns the ticket to the correct department and generates an estimated resolution
+                        timeline.</p>
+                </div>
+                <div class="step-item reveal">
+                    <div class="step-num">3</div>
+                    <h3>Track & Resolve</h3>
+                    <p>Follow progress in real-time. Get notified when your issue is resolved and rate the outcome.</p>
+                </div>
+                <div class="step-item reveal">
+                    <div class="step-num">4</div>
+                    <h3>Improve Together</h3>
+                    <p>Resolution data feeds back into our AI, making the system smarter with every fixed problem.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA BANNER ===== -->
+    <div class="container">
+        <div class="cta-banner reveal">
+            <h2>Ready to fix your city?</h2>
+            <p>Join thousands of citizens already making a difference with AI-powered civic engagement.</p>
+            <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+                <a href="dashboard.html" class="btn btn-ghost btn-lg" id="cta-dashboard-btn">Open Dashboard</a>
+                <a href="about.html" class="btn btn-ghost btn-lg" id="cta-about-btn">Learn More</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="nav-logo">
+                        <div class="logo-icon">🏙️</div>Fix<span style="color:var(--primary)">EveryCity</span>
+                    </div>
+                    <p>AI-powered civic technology that connects citizens with city services for faster, smarter urban
+                        management.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <ul>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="index.html">Home</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Project</h5>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Team</a></li>
+                        <li><a href="about.html#timeline">Timeline</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Links</h5>
+                    <ul>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">Hackathon Brief</a></li>
+                        <li><a href="#">API Docs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FixEveryCity · Built for Hackathon 2026 ✨</p>
+                <p>Powered by AI &amp; Civic Passion</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

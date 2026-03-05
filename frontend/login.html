@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — FixEveryCity</title>
+    <meta name="description"
+        content="Log in to your FixEveryCity account to access the AI-powered city issue dashboard.">
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Supabase JS SDK via CDN (must load first, no defer) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js" defer></script>
+
+
+    <style>
+        /* ===== AUTH PAGE LAYOUT ===== */
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f3ff 0%, #faf5ff 50%, #f0faff 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 40px 24px;
+        }
+
+        /* Animated background grid */
+        .auth-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(79, 110, 247, .05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 110, 247, .05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridShift 20s linear infinite;
+        }
+
+        /* Blobs */
+        .auth-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .4;
+            pointer-events: none;
+        }
+
+        .auth-blob-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #ced8fd, #e8d5fb);
+            top: -100px;
+            right: -80px;
+            animation: blobFloat 8s ease-in-out infinite;
+        }
+
+        .auth-blob-2 {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, #b2e8f7, #d4f5e9);
+            bottom: -60px;
+            left: -60px;
+            animation: blobFloat 10s ease-in-out infinite reverse;
+        }
+
+        /* Auth Card */
+        .auth-card {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 440px;
+            padding: 48px 40px;
+            animation: authSlideUp .6s ease forwards;
+        }
+
+        @keyframes authSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Logo at top */
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-decoration: none;
+        }
+
+        .auth-logo .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .auth-logo span {
+            color: var(--primary);
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            font-size: .9rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        /* Form */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text-mid);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--font);
+            font-size: .95rem;
+            color: var(--text-dark);
+            background: var(--bg);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 110, 247, .1);
+        }
+
+        .form-group input.input-error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, .1);
+        }
+
+        /* Error message */
+        .form-error {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: #dc2626;
+            font-size: .85rem;
+            font-weight: 500;
+            animation: shakeIn .3s ease;
+        }
+
+        .form-error.visible {
+            display: flex;
+        }
+
+        @keyframes shakeIn {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-6px);
+            }
+
+            75% {
+                transform: translateX(6px);
+            }
+        }
+
+        /* Success message */
+        .form-success {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #f0fff5;
+            border: 1.5px solid #86efac;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: #16a34a;
+            font-size: .85rem;
+            font-weight: 500;
+        }
+
+        .form-success.visible {
+            display: flex;
+        }
+
+        /* Submit button */
+        .auth-submit {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            color: #fff;
+            font-family: var(--font);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(79, 110, 247, .35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-submit:hover:not(:disabled) {
+            background: var(--primary-dk);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79, 110, 247, .45);
+        }
+
+        .auth-submit:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
+        /* Spinner inside button */
+        .auth-submit .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(255, 255, 255, .35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            margin-right: 8px;
+        }
+
+        .auth-submit.loading .spinner {
+            display: inline-block;
+        }
+
+        .auth-submit.loading .btn-text {
+            opacity: .8;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Divider */
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 4px 0;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .auth-divider span {
+            font-size: .8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Footer link */
+        .auth-footer {
+            text-align: center;
+            font-size: .88rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .auth-footer a:hover {
+            color: var(--primary-dk);
+            text-decoration: underline;
+        }
+
+        /* Back to home */
+        .auth-back {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .auth-back a {
+            font-size: .83rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .auth-back a:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 36px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body class="page-fade-in">
+
+    <div class="auth-page">
+        <!-- Decorative blobs -->
+        <div class="auth-blob auth-blob-1"></div>
+        <div class="auth-blob auth-blob-2"></div>
+
+        <div class="auth-card">
+            <!-- Logo -->
+            <a href="index.html" class="auth-logo" id="auth-logo">
+                <div class="logo-icon">🏙️</div>
+                Fix<span>EveryCity</span>
+            </a>
+
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your account to access the dashboard</p>
+
+            <!-- Error / Success Messages -->
+            <div class="form-error" id="loginError">
+                <span>⚠️</span>
+                <span id="loginErrorMsg">Invalid email or password.</span>
+            </div>
+
+            <div class="form-success" id="loginSuccess">
+                <span>✅</span>
+                <span id="loginSuccessMsg">Login successful! Redirecting...</span>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" name="email" placeholder="you@example.com" required
+                        autocomplete="email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required
+                        autocomplete="current-password" minlength="6" />
+                </div>
+
+                <button type="submit" class="auth-submit" id="loginBtn">
+                    <span class="spinner"></span>
+                    <span class="btn-text">🔐 Sign In</span>
+                </button>
+
+                <div class="auth-divider"><span>or</span></div>
+
+                <p class="auth-footer">
+                    Don't have an account? <a href="signup.html" id="signup-link">Create one</a>
+                </p>
+            </form>
+
+            <div class="auth-back">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // LOGIN HANDLER
+        // ============================================================
+
+        /**
+         * Handles the login form submission.
+         * Validates input, calls Supabase signIn, and handles response.
+         */
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const errorMsg = document.getElementById('loginErrorMsg');
+            const successEl = document.getElementById('loginSuccess');
+
+            // Reset states
+            errorEl.classList.remove('visible');
+            successEl.classList.remove('visible');
+            emailInput.classList.remove('input-error');
+            passwordInput.classList.remove('input-error');
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // --- Client-side validation ---
+            if (!email || !isValidEmail(email)) {
+                emailInput.classList.add('input-error');
+                errorMsg.textContent = 'Please enter a valid email address.';
+                errorEl.classList.add('visible');
+                emailInput.focus();
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                passwordInput.classList.add('input-error');
+                errorMsg.textContent = 'Password must be at least 6 characters.';
+                errorEl.classList.add('visible');
+                passwordInput.focus();
+                return;
+            }
+
+            // --- Check if Supabase is configured ---
+            if (!isSupabaseConfigured()) {
+                errorMsg.textContent = 'Supabase is not configured. Please add your project URL and anon key in supabaseClient.js.';
+                errorEl.classList.add('visible');
+                return;
+            }
+
+            // --- Loading state ---
+            btn.disabled = true;
+            btn.classList.add('loading');
+
+            // --- Attempt login ---
+            const result = await signInUser(email, password);
+
+            if (result.success) {
+                // Show success message
+                successEl.classList.add('visible');
+
+                // Redirect to dashboard (or saved redirect URL)
+                setTimeout(() => {
+                    const redirect = sessionStorage.getItem('fec_redirect');
+                    sessionStorage.removeItem('fec_redirect');
+                    window.location.href = redirect || 'dashboard.html';
+                }, 1000);
+            } else {
+                // Show error message
+                errorMsg.textContent = result.error || 'Invalid email or password. Please try again.';
+                errorEl.classList.add('visible');
+
+                btn.disabled = false;
+                btn.classList.remove('loading');
+            }
+        }
+
+        // Redirect to dashboard if already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            redirectIfLoggedIn();
+        });
+    </script>
+
+</body>
+
+</html>
