@@ -57,8 +57,8 @@
 // ============================================================
 // SUPABASE CREDENTIALS — Replace with your own
 // ============================================================
-const SUPABASE_URL = "https://hdbxsnsvonfjdztvmcer.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkYnhzbnN2b25mamR6dHZtY2VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODE3NjcsImV4cCI6MjA4ODI1Nzc2N30.I8qXV4ODKzw5MI3Zs3XA7QTGWQMCW8mtTe7_KBR25LQ";
+const SUPABASE_URL = "Your_Supabase_URL";
+const SUPABASE_ANON_KEY = "Your_Supabase_ANON_key"
 
 // ============================================================
 // INITIALIZE SUPABASE CLIENT
